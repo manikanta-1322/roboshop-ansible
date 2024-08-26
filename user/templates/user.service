@@ -1,0 +1,12 @@
+[Unit]
+Description = User Service
+[Service]
+User=roboshop
+Environment=REDIS_HOST="{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.user.REDIS_HOST', region='us-east-1' ) }}"
+Environment=DOCUMENTDB=true
+Environment=MONGO_URL="{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.user.MONGO_URL', region='us-east-1' ) }}"
+ExecStart=/bin/bash /app/nodejs.sh
+SyslogIdentifier=user
+
+[Install]
+WantedBy=multi-user.target

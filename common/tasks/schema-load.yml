@@ -1,0 +1,44 @@
+- name: MongoDB Schema Load
+  when: schema_type == "mongo"
+  block:
+    - name: Copy MongoDB repo file
+      ansible.builtin.template:
+        src: mongo.repo
+        dest: /etc/yum.repos.d/mongo.repo
+
+    - name: Install Mongo Client
+      ansible.builtin.dnf:
+        name: mongodb-org-shell
+        state: installed
+
+    - name: Load Schema
+      ansible.builtin.shell: mongo --ssl --host {{ENDPOINT}} --sslCAFile /app/rds-combined-ca-bundle.pem --username {{USERNAME}} --password {{PASSWORD}} </app/schema/{{ component }}.js
+      vars:
+        ENDPOINT: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.catalogue.DOCDB_ENDPOINT', region='us-east-1' ) }}:27017"
+        USERNAME: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.docdb.username', region='us-east-1' ) }}"
+        PASSWORD: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.docdb.password', region='us-east-1' ) }}"
+
+- name: MySQL Schema Load
+  when: schema_type == "mysql"
+  block:
+    - name: Install MySQL Client
+      ansible.builtin.dnf:
+        name: mysql
+        state: installed
+
+    - name: Check if the schema exists
+      ansible.builtin.shell: echo 'show databases' | mysql -h {{ DB_HOST }} -u{{ DB_USER }} -p{{ DB_PASS }} | grep cities
+      vars:
+        DB_HOST: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.shipping.DB_HOST', region='us-east-1' ) }}"
+        DB_USER: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.rds.username', region='us-east-1' ) }}"
+        DB_PASS: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.rds.password', region='us-east-1' ) }}"
+      ignore_errors: yes
+      register: out
+
+    - name: Load Schema
+      ansible.builtin.shell: mysql -h {{ DB_HOST }} -u{{ DB_USER }} -p{{ DB_PASS }} < /app/schema/{{component}}.sql
+      vars:
+        DB_HOST: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.shipping.DB_HOST', region='us-east-1' ) }}"
+        DB_USER: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.rds.username', region='us-east-1' ) }}"
+        DB_PASS: "{{ lookup('amazon.aws.aws_ssm', '{{env}}.{{project_name}}.rds.password', region='us-east-1' ) }}"
+      when: out.rc != 0

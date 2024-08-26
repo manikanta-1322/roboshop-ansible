@@ -1,0 +1,12 @@
+component: catalogue
+log_file: /var/log/catalogue.log
+is_rsyslog_needed: yes
+
+app_dir: /app
+app_user: roboshop
+service_name: catalogue
+
+schema_needed: true
+schema_type: mongo
+
+app_type: nodejs

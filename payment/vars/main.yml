@@ -1,0 +1,10 @@
+component: payment
+log_file: /var/log/payment.log
+is_rsyslog_needed: yes
+
+app_dir: /app
+app_user: roboshop
+service_name: payment
+schema_needed: false
+
+app_type: python
