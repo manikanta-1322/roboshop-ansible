@@ -1,0 +1,8 @@
+- name: RoboSHop Project Deployment
+  hosts: all
+  become: yes
+  serial: 1
+  vars:
+    project_name: roboshop
+  roles:
+    - deployment

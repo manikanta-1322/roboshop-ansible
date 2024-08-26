@@ -1,0 +1,12 @@
+- name: Import Deployment
+  ansible.builtin.import_role:
+    name: "{{ component }}"
+    tasks_from: deploy
+
+- name: Import SystemD
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: systemd
+  vars:
+    deployment: true
+
